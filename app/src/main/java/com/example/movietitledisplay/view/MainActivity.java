@@ -20,19 +20,19 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    // ViewModel to connect UI to data (follows MVVM pattern)
+    // ViewModel follows MVVM - connects UI with the data and keeps it alive through rotations
     private MovieViewModel movieViewModel;
 
-    // Adapter to bind movie data to the RecyclerView
+    // Adapter binds the list of movies to the RecyclerView UI
     private MovieAdapter movieAdapter;
 
-    // RecyclerView to display list of movies
+    // RecyclerView is the UI component that shows the movie list in a scrollable view
     private RecyclerView recyclerView;
 
-    // EditText where user types the movie they want to search
+    // EditText for user to type their movie search
     private EditText editSearch;
 
-    // Search button to trigger the movie search
+    // Button that starts the search process
     private Button btnSearch;
 
     @Override
@@ -40,43 +40,49 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Connecting layout elements with code
+        // Link UI components to their XML counterparts
         editSearch = findViewById(R.id.editSearch);
         btnSearch = findViewById(R.id.btnSearch);
         recyclerView = findViewById(R.id.recyclerView);
 
-        // Set up adapter and what happens when a movie is clicked
+        // Set up the adapter and tell it what happens when a user clicks a movie
         movieAdapter = new MovieAdapter(new ArrayList<>(), movie -> {
-            // When a movie is clicked, open the details screen
+            // When a movie is clicked, open a new screen (MovieDetailsActivity)
             Intent intent = new Intent(MainActivity.this, MovieDetailsActivity.class);
-            // Send the movie's IMDb ID so we can load full details on the next screen
+            // Pass the selected movie's IMDb ID to the next screen so we can fetch details
             intent.putExtra("imdbID", movie.getImdbID());
             startActivity(intent);
         });
 
-        // Attach layout manager and adapter to RecyclerView
+        // Connect the adapter and layout manager to the RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(movieAdapter);
 
-        // Set up the ViewModel to observe data changes
+        // Set up the ViewModel - this is where LiveData and business logic live
         movieViewModel = new ViewModelProvider(this).get(MovieViewModel.class);
 
-        // Watch for changes in movie data, and update UI when new data arrives
+        // When the LiveData list of movies changes (after search), update the adapter
         movieViewModel.getMovies().observe(this, movies -> {
             if (movies != null && !movies.isEmpty()) {
-                movieAdapter.updateMovies(movies); // update UI with new movies
+                // If results exist, show them
+                movieAdapter.updateMovies(movies);
             } else {
+                // Otherwise, show a toast message and clear the list visually
                 Toast.makeText(this, "No results found", Toast.LENGTH_SHORT).show();
-                movieAdapter.updateMovies(new ArrayList<>()); // show empty state
+                movieAdapter.updateMovies(new ArrayList<>());
             }
         });
 
-        // When search button is clicked
+        // When user taps the Search button
         btnSearch.setOnClickListener(v -> {
-            String query = editSearch.getText().toString().trim(); // get what user typed
+            // Get the search term from the input box
+            String query = editSearch.getText().toString().trim();
+
             if (!query.isEmpty()) {
-                movieViewModel.searchMovies(query); // start the search
+                // Pass the search term to ViewModel, which handles the rest
+                movieViewModel.searchMovies(query);
             } else {
+                // Tell the user to actually enter something
                 Toast.makeText(MainActivity.this, "Please enter a movie name", Toast.LENGTH_SHORT).show();
             }
         });

@@ -17,45 +17,46 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-// This class is responsible for getting movie data from the OMDB API
-// It sits between the ViewModel and the API, as part of the MVVM structure
+// The Repository layer manages data access and API calls.
+// In MVVM, the ViewModel calls this class to fetch or update data.
 public class MovieRepository {
 
-    // Holds the live movie list we will update when data comes back from the API
+    // LiveData list that holds the movies fetched from the API
     private final MutableLiveData<List<Movie>> movieListLiveData = new MutableLiveData<>();
 
-    // Allows the ViewModel to observe changes to the movie list
+    // This allows the ViewModel to observe changes to the movie list
     public LiveData<List<Movie>> getMovieList() {
         return movieListLiveData;
     }
 
-    // This method performs the actual network call to the OMDB API
+    // This function is called when the user searches for a movie
     public void searchMovies(String query) {
-        // Creates an instance of the API interface
+        // Create an instance of the API service using Retrofit
         OmdbApiService apiService = RetrofitClient.getRetrofitInstance().create(OmdbApiService.class);
 
-        // Set up the call to search movies using the API key and query
+        // Build the actual API call to search movies using the query + API key
         Call<MovieSearchResponse> call = apiService.searchMovies(Constants.API_KEY, query);
 
-        // Make the request asynchronously
+        // Make the network call asynchronously (on a background thread)
         call.enqueue(new Callback<MovieSearchResponse>() {
             @Override
             public void onResponse(Call<MovieSearchResponse> call, Response<MovieSearchResponse> response) {
-                // If successful and data exists, update the live data with the movie list
+                // If the response was successful and contains movie results
                 if (response.isSuccessful() && response.body() != null && response.body().getSearch() != null) {
+                    // Update the LiveData so the ViewModel and UI can react
                     movieListLiveData.postValue(response.body().getSearch());
                 } else {
-                    // Otherwise, log the issue and clear the list
+                    // If the response is empty or something is wrong, log it
                     Log.e("MovieRepository", "Empty or failed response: " + response.code());
-                    movieListLiveData.postValue(null);
+                    movieListLiveData.postValue(null); // Clear the movie list in UI
                 }
             }
 
             @Override
             public void onFailure(Call<MovieSearchResponse> call, Throwable t) {
-                // If the network call completely fails, show an error and clear the list
+                // If the API call failed entirely (e.g., no internet), log the error
                 Log.e("MovieRepository", "API call failed: " + t.getMessage());
-                movieListLiveData.postValue(null);
+                movieListLiveData.postValue(null); // Clear the movie list in UI
             }
         });
     }

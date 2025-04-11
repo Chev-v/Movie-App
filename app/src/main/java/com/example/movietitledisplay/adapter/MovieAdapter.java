@@ -13,71 +13,76 @@ import com.example.movietitledisplay.model.Movie;
 
 import java.util.List;
 
+// Adapter that helps display a list of movies in the RecyclerView
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
-    // List of movies that will be displayed in the RecyclerView
+    // List of movie data to show in the UI
     private List<Movie> movieList;
 
-    // Interface to handle what happens when a movie is clicked
+    // A custom listener that tells us when a user taps on a movie
     private final OnItemClickListener listener;
 
-    // Constructor to initialize movie list and click listener
+    // Constructor that sets up the data list and the click listener
     public MovieAdapter(List<Movie> movieList, OnItemClickListener listener) {
         this.movieList = movieList;
         this.listener = listener;
     }
 
-    // This interface lets MainActivity respond when a user taps on a movie
+    // Interface that lets MainActivity know which movie was tapped
     public interface OnItemClickListener {
         void onItemClick(Movie movie);
     }
 
-    // Creates the layout for each item in the RecyclerView
+    // This method creates each list item layout (movie row) from XML
     @NonNull
     @Override
     public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Inflate the movie_title.xml layout for each row
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.movie_title, parent, false);
         return new MovieViewHolder(view);
     }
 
-    // Binds data from each movie into the ViewHolder layout
+    // This method binds actual movie data into each row of the list
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        Movie movie = movieList.get(position);
-        holder.bind(movie, listener); // send the movie and listener to be used inside holder
+        Movie movie = movieList.get(position); // Get movie at current row
+        holder.bind(movie, listener); // Send it to the ViewHolder to display
     }
 
-    // Returns how many movie items are in the list
+    // Tells RecyclerView how many movie rows to show
     @Override
     public int getItemCount() {
         return movieList != null ? movieList.size() : 0;
     }
 
-    // Used to update the list of movies when data changes (like after a search)
+    // Call this method to refresh the list of movies being shown
     public void updateMovies(List<Movie> newList) {
         this.movieList = newList;
-        notifyDataSetChanged(); // tells the RecyclerView to redraw the list
+        notifyDataSetChanged(); // Tells RecyclerView to redraw everything
     }
 
-    // This class holds the views for each movie item (title, year, type)
+    // This class holds the views for each movie row: title, year, type
     public static class MovieViewHolder extends RecyclerView.ViewHolder {
+
+        // UI elements inside the movie row
         TextView textTitle, textYear, textType;
 
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
+            // Hook up the XML views with Java variables
             textTitle = itemView.findViewById(R.id.textTitle);
             textYear = itemView.findViewById(R.id.textYear);
             textType = itemView.findViewById(R.id.textType);
         }
 
-        // Binds one movie's data into the layout, and sets up click event
+        // Bind the movie data to the views, and set the click listener
         public void bind(final Movie movie, final OnItemClickListener listener) {
-            textTitle.setText(movie.getTitle());
-            textYear.setText(movie.getYear());
-            textType.setText("Type: " + movie.getType());
+            textTitle.setText(movie.getTitle());       // Movie title (e.g., Inception)
+            textYear.setText(movie.getYear());         // Release year (e.g., 2010)
+            textType.setText("Type: " + movie.getType()); // Type (e.g., movie, series)
 
-            // When this movie row is clicked, trigger the listener
+            // When user taps this row, trigger the callback to MainActivity
             itemView.setOnClickListener(v -> listener.onItemClick(movie));
         }
     }

@@ -8,20 +8,22 @@ import com.example.movietitledisplay.repository.MovieRepository;
 
 import java.util.List;
 
-// ViewModel acts as the bridge between UI and data (repository)
-// Helps the activity stay clean and survive screen rotations
+// ViewModel sits between the UI and the Repository.
+// Its job is to provide data to the UI in a way that's lifecycle-safe.
 public class MovieViewModel extends ViewModel {
 
-    // Repository handles the actual data fetching
+    // The Repository is responsible for talking to the OMDB API
     private final MovieRepository repository = new MovieRepository();
 
-    // This returns live data that activities/fragments can observe
+    // This method returns LiveData that holds a list of movies
+    // The UI can observe this and auto-update when new data is available
     public LiveData<List<Movie>> getMovies() {
         return repository.getMovieList();
     }
 
-    // Called by the UI when a user wants to search for a movie
+    // This method gets called when the user performs a search
+    // It passes the search query to the Repository to fetch results
     public void searchMovies(String query) {
-        repository.searchMovies(query); // Delegate the work to repository
+        repository.searchMovies(query); // Delegate actual API call to the repo
     }
 }

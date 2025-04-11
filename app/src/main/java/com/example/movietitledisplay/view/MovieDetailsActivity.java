@@ -18,10 +18,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-// This screen shows full details about a selected movie
+// This screen shows detailed info about one selected movie
 public class MovieDetailsActivity extends AppCompatActivity {
 
-    // UI elements to show poster and movie info
+    // UI elements to display movie info and poster
     ImageView posterImage;
     TextView titleText, yearText, typeText, ratedText, runtimeText, genreText, plotText;
 
@@ -30,7 +30,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
 
-        // Connect XML views to Java variables
+        // Link the layout views to variables so we can fill them later
         posterImage = findViewById(R.id.posterImage);
         titleText = findViewById(R.id.titleText);
         yearText = findViewById(R.id.yearText);
@@ -40,31 +40,36 @@ public class MovieDetailsActivity extends AppCompatActivity {
         genreText = findViewById(R.id.genreText);
         plotText = findViewById(R.id.plotText);
 
-        // Get the IMDb ID from the previous screen
+        // Get the IMDb ID from the Intent that opened this screen
         String imdbId = getIntent().getStringExtra("imdbID");
 
         if (imdbId != null) {
-            // Make the API call to load full details for this movie
+            // If we have a movie ID, go fetch the full movie details
             fetchMovieDetails(imdbId);
         } else {
-            // Show error if no ID was passed
+            // If no ID was passed, show error and close screen
             Toast.makeText(this, "Missing movie ID", Toast.LENGTH_SHORT).show();
             finish();
         }
     }
 
-    // Calls OMDB API to get detailed movie data
+    // Call OMDB API to get detailed data for the selected movie
     private void fetchMovieDetails(String imdbId) {
+        // Create API service instance
         OmdbApiService apiService = RetrofitClient.getRetrofitInstance().create(OmdbApiService.class);
+
+        // Build API call to fetch details by IMDb ID
         Call<Movie> call = apiService.getMovieDetails(Constants.API_KEY, imdbId);
 
+        // Make the call in the background
         call.enqueue(new Callback<Movie>() {
             @Override
             public void onResponse(Call<Movie> call, Response<Movie> response) {
+                // If we got data back successfully
                 if (response.isSuccessful() && response.body() != null) {
                     Movie movie = response.body();
 
-                    // Set all the views using the data from API
+                    // Plug all the movie data into the screen
                     titleText.setText(movie.getTitle());
                     yearText.setText("Year: " + movie.getYear());
                     typeText.setText("Type: " + movie.getType());
@@ -73,9 +78,10 @@ public class MovieDetailsActivity extends AppCompatActivity {
                     genreText.setText("Genre: " + movie.getGenre());
                     plotText.setText("Overview: " + movie.getPlot());
 
-                    // Load the poster using Picasso
+                    // Load the movie poster into the ImageView using Picasso
                     Picasso.get().load(movie.getPoster()).into(posterImage);
                 } else {
+                    // Something went wrong with the response
                     Toast.makeText(MovieDetailsActivity.this, "Failed to load details", Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -83,7 +89,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Movie> call, Throwable t) {
-                // If something went wrong with the API call
+                // Total failure (maybe no internet or bad request)
                 Toast.makeText(MovieDetailsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 finish();
             }
